@@ -95,25 +95,43 @@ def prepare_run_database(syscalls):
     return _run_database
 
 
-def run_and_gather_statics(syscalls):
+def run_and_gather_statistics(syscalls, datapath, passes_per_call=1):
     # Implement:
     #  Takes a path as input for where to write files
     #  Take number of passes per command line as input
-    #  Print os & machine information statistics to file
+    #  --> Print os & machine information statistics to file
     #  Populate the database with successful run and desired passes
     #  Add column with exit status
     #  Name file names with e.g. <run no>.<desired run no>
-    #  Prints meta data about the run in a file to be read?
     #  Put std err in file
     #  Put std out in file
 
-    if os.path.isdir(storage_dir):
-        pass
-    else:
-        pass 
+    if not os.path.isdir(datapath):
+        raise FileNotFoundError
 
-    # Get system information
-    _sys_info = "Hello" 
+    # Get CPU information
+    # add a try-catch statement here
+    _LSCPU = ["/usr/bin/lscpu"]
+    if os.path.isfile(_LSCPU[0]) and os.access(_LSCPU[0], os.X_OK):
+        _sys_info = os.fsdecode(subprocess.check_output(_LSCPU)) 
+    else:
+        # Implement optional method later
+        _sys_info = None 
+
+    _SYSINFOFILE = "sysinfo.parstud"
+    
+
+    
+    # Get memory information
+    _FREE = ["/usr/bin/free", "--total", "--giga"]
+    if os.path.isfile(_FREE[0]) and os.access(_FREE[0], os.X_OK):
+        _mem_info = \
+            os.fsdecode(subprocess.check_output(_FREE))
+    else:
+        # Implement optional method later 
+        _mem_info = None 
+
+    _MEMINFOFILE = "meminfo.parstud"
 
     _df_columns = ['command', 'start time', 'end time', 
                    'output files', 'exit status', 'pass no.', 
