@@ -85,20 +85,18 @@ def run_stuff(syscall, use_shell=False):
     return _cmd_out
 
 
-def prepare_run_database(syscalls):
+def prepare_run_database(syscalls, columnspec, passes_per_cmd=1):
     # Impllement:   
     #   Check if syscalls is list or typle 
-    _columns = ['command', 'start time', 'end time', 'output files', 
-        'exit status']
-    _run_database = pandas.DataFrame(columns=_columns)
+    _run_database = pandas.DataFrame(columns=columnspec)
     _run_database['command'] = syscalls
     return _run_database
 
 
-def run_and_gather_statistics(syscalls, datapath, passes_per_call=1):
+def run_and_gather_statistics(syscalls, datapath, passes_per_call=1, buildonly=False):
     # Implement:
-    #  Takes a path as input for where to write files
-    #  Take number of passes per command line as input
+    #  --> Takes a path as input for where to write files
+    #  --> Take number of passes per command line as input
     #  --> Print os & machine information statistics to file
     #  Populate the database with successful run and desired passes
     #  Add column with exit status
@@ -109,6 +107,7 @@ def run_and_gather_statistics(syscalls, datapath, passes_per_call=1):
     if not os.path.isdir(datapath):
         raise FileNotFoundError
 
+    #
     # Get CPU information
     # add a try-catch statement here
     _LSCPU = ["/usr/bin/lscpu"]
@@ -119,9 +118,10 @@ def run_and_gather_statistics(syscalls, datapath, passes_per_call=1):
         _sys_info = None 
 
     _SYSINFOFILE = "sysinfo.parstud"
-    
-
-    
+    with open(os.path.join(datapath, _SYSINFOFILE), mode='w') as f:
+        f.write(_sys_info)
+   
+    #
     # Get memory information
     _FREE = ["/usr/bin/free", "--total", "--giga"]
     if os.path.isfile(_FREE[0]) and os.access(_FREE[0], os.X_OK):
@@ -132,13 +132,22 @@ def run_and_gather_statistics(syscalls, datapath, passes_per_call=1):
         _mem_info = None 
 
     _MEMINFOFILE = "meminfo.parstud"
+    with open(os.path.join(datapath, _MEMINFOFILE), mode='w') as f:
+        f.write(_mem_info)
 
+
+    #
+    # Build database on run configuration and save to file
+    _RUNSTATFILE = "runinfo.parstud"
     _df_columns = ['command', 'start time', 'end time', 
                    'output files', 'exit status', 'pass no.', 
-                   'desired passes']
+                   'desired passes'] 
+    _rundb = prepare_run_database(syscalls, _df_columns)
+    _rundb.to_csv(os.path.join(datapath, _RUNSTATFILE))
+    
 
-    
-    
+     
+     
 
 
 if __name__ == "__main__":

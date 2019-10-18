@@ -1,5 +1,6 @@
 import sys 
 import os
+import shutil
 sys.path.append(os.path.abspath("../parstud/"))
 #from .. import run_profile
 #import run_profile
@@ -51,18 +52,36 @@ def test_run_stuff():
 
 
 def test_prepare_run_database():
-    prepare_run_database(["cmd1", "cmd2"]) 
+    _rundatabase = prepare_run_database(["cmd1", "cmd2"], ["column1", "column2"])
+#    pprint.pprint(_rundatabase)
 
 
 def test_run_and_gather_statistics():
     _curr_path_file = os.path.realpath(__file__) 
     _curr_dir = os.path.dirname(_curr_path_file)
     _output_dir = os.path.join(_curr_dir, 'output/testrun')
-    run_and_gather_statistics("cmd", _output_dir)
-   
+    
+    # Ensure empty output directory
+    if os.path.isdir(_output_dir):
+        shutil.rmtree(_output_dir)
+    os.mkdir(_output_dir) 
+
+    # Run a simple command with existing output dir.
+    # No execution since buildonly is set to true
+    run_and_gather_statistics("cmd", _output_dir, buildonly=True)
+
+    # Run a simple command with non-existant output dir
     _err_output_dir = os.path.join(_curr_dir, 'output/testrun-nonexist')
     try:
-        run_and_gather_statistics("cmd", _output_dir)
+        run_and_gather_statistics("cmd", _output_dir, buildonly=True)
     except Exception as _exc:
         assert isinstance(_exc, FileNotFoundError)
 
+    # Generate syscalls and build run database
+    _variations = [1,2,3,4,5] 
+    _basecmd = "par run -np"
+    _syscalls = generate_syscalls(_variations, _basecmd)
+    run_and_gather_statistics(_syscalls, _output_dir, buildonly=True)
+
+     
+    
