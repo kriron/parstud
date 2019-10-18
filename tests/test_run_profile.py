@@ -53,3 +53,16 @@ def test_run_stuff():
 def test_prepare_run_database():
     prepare_run_database(["cmd1", "cmd2"]) 
 
+
+def test_run_and_gather_statistics():
+    _curr_path_file = os.path.realpath(__file__) 
+    _curr_dir = os.path.dirname(_curr_path_file)
+    _output_dir = os.path.join(_curr_dir, 'output/testrun')
+    run_and_gather_statistics("cmd", _output_dir)
+   
+    _err_output_dir = os.path.join(_curr_dir, 'output/testrun-nonexist')
+    try:
+        run_and_gather_statistics("cmd", _output_dir)
+    except Exception as _exc:
+        assert isinstance(_exc, FileNotFoundError)
+
