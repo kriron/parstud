@@ -4,6 +4,7 @@ import os
 import subprocess
 import pprint
 import pandas
+import datetime
 
 
 def is_os_compatible(osname):
@@ -86,26 +87,78 @@ def run_stuff(syscall, use_shell=False):
 
 
 def prepare_run_database(syscalls, columnspec, passes_per_cmd=1):
-    # Impllement:   
-    #   Check if syscalls is list or typle 
+    # Check if syscalls is a list or tuple.
+    if not (isinstance(syscalls, list) or isinstance(syscalls, tuple)):
+        raise TypeError("syscalls need to be of type list or tuple")
+
+    if not isinstance(columnspec, list):
+        raise TypeError("columnspec need to be of type list or tuple")
+
     _run_database = pandas.DataFrame(columns=columnspec)
-    _run_database['command'] = syscalls
+    #_run_database = pandas.DataFrame()
+
+    _dicts = []
+    for _syscall in syscalls:
+        for _i in range(1, passes_per_cmd+1):
+            _dicts.append({'command': _syscall, 'pass no.': _i, \
+                'desired passes': passes_per_cmd})
+
+    _run_database = _run_database.append(pandas.DataFrame(_dicts))
     return _run_database
 
 
-def run_and_gather_statistics(syscalls, datapath, passes_per_call=1, buildonly=False):
+def execute_per_run_database(dbpath, rundb, dbfile):
+    
+    for _rundb_row in runbd.itertuples():
+        # Check if command was run and reported as completed succesfully.
+        # If true, skip and check next.
+        if _rundb_row['attempted'] is True:
+            break
+
+        # Update the database with when command was started and print
+        # update to file.
+        rundb.at[_rundb_row.index, 'start time'] = \
+            datetime.datetime.now().isoformat()
+        rundb.to_csv(dbfile)
+
+        # Run system command
+        try:
+            _cmd_out = subprocess.check_output(_rundb_row['command'], \
+               stderr=subprocess.STDOUT)
+            rundb.at[_rundb_row.index, 'exit status'] = 0
+        except Exception as _exc:
+            rundb.at[_rundb_row.index, 'exit status'] = _exc.returncode
+            # _exc.output?
+        finally:
+            rundb.to_csv(dbfile)
+            #with open(os.path.
+
+
+        # Update the database with when command ended and print
+        # update to file.
+        rundb.at[_rundb_row.index, 'end time'] = \
+            datetime.datetime.now().isoformat()
+        #rundb.to_csv(dbfile)
+
+
+def run_and_gather_statistics(syscalls, datapath, passes_per_cmd=1, \
+        buildonly=False):
     # Implement:
     #  --> Takes a path as input for where to write files
     #  --> Take number of passes per command line as input
     #  --> Print os & machine information statistics to file
-    #  Populate the database with successful run and desired passes
-    #  Add column with exit status
-    #  Name file names with e.g. <run no>.<desired run no>
+    #  --> Populate the database with successful run and desired passes
+    #  --> Add column with exit status
+    #  --> Name file names with e.g. <run no>.<desired run no>
     #  Put std err in file
     #  Put std out in file
 
     if not os.path.isdir(datapath):
         raise FileNotFoundError
+    
+    #
+    # Add checking if the datapath is writable by script
+    #
 
     #
     # Get CPU information
@@ -140,14 +193,15 @@ def run_and_gather_statistics(syscalls, datapath, passes_per_call=1, buildonly=F
     # Build database on run configuration and save to file
     _RUNSTATFILE = "runinfo.parstud"
     _df_columns = ['command', 'start time', 'end time', 
-                   'output files', 'exit status', 'pass no.', 
-                   'desired passes'] 
-    _rundb = prepare_run_database(syscalls, _df_columns)
+                   'stdout file', 'stderr file', 'exit status', 'pass no.', 
+                   'desired passes', 'attempded'] 
+    _rundb = prepare_run_database(syscalls, _df_columns, \
+        passes_per_cmd=passes_per_cmd)
     _rundb.to_csv(os.path.join(datapath, _RUNSTATFILE))
-    
-
-     
-     
+        
+    # If true then the execution step will be skipped
+    if buildonly:
+        return _rundb
 
 
 if __name__ == "__main__":

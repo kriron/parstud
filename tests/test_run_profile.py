@@ -53,7 +53,11 @@ def test_run_stuff():
 
 def test_prepare_run_database():
     _rundatabase = prepare_run_database(["cmd1", "cmd2"], ["column1", "column2"])
-#    pprint.pprint(_rundatabase)
+
+    try:
+        prepare_run_database("cmd", ["column1", "column2"])
+    except Exception as _exc:
+        assert isinstance(_exc, TypeError)
 
 
 def test_run_and_gather_statistics():
@@ -68,12 +72,12 @@ def test_run_and_gather_statistics():
 
     # Run a simple command with existing output dir.
     # No execution since buildonly is set to true
-    run_and_gather_statistics("cmd", _output_dir, buildonly=True)
+    run_and_gather_statistics(["cmd"], _output_dir, buildonly=True)
 
     # Run a simple command with non-existant output dir
     _err_output_dir = os.path.join(_curr_dir, 'output/testrun-nonexist')
     try:
-        run_and_gather_statistics("cmd", _output_dir, buildonly=True)
+        run_and_gather_statistics(["cmd"], _output_dir, buildonly=True)
     except Exception as _exc:
         assert isinstance(_exc, FileNotFoundError)
 
@@ -81,7 +85,8 @@ def test_run_and_gather_statistics():
     _variations = [1,2,3,4,5] 
     _basecmd = "par run -np"
     _syscalls = generate_syscalls(_variations, _basecmd)
-    run_and_gather_statistics(_syscalls, _output_dir, buildonly=True)
+    _passes_per_cmd = 3 
+    run_and_gather_statistics(_syscalls, _output_dir, \
+        passes_per_cmd=_passes_per_cmd, buildonly=True)
 
-     
     
