@@ -25,7 +25,7 @@ def test_generate_syscalls():
                     "cmd -np 2", 
                     "cmd -np 3"] 
 
-    # Generate a syscal that sets an environment variable.
+    # Generate a syscall that sets an environment variable.
     _out = generate_syscalls([1,2,3],"cmd_to_run test", env_var="PAR_RUNS")
     assert _out == ["export PAR_RUNS=1 && cmd_to_run test",
                    "export PAR_RUNS=2 && cmd_to_run test",
@@ -90,3 +90,11 @@ def test_run_and_gather_statistics():
         passes_per_cmd=_passes_per_cmd, buildonly=True)
 
     
+    # Generate syscalls, build run database and execute commands
+    _variations = ['.', 'blargh']
+    _basecmd = "/usr/bin/ls"
+    _syscalls = generate_syscalls(_variations, _basecmd)
+    _passes_per_cmd = 1
+    run_and_gather_statistics(_syscalls, _output_dir, \
+        passes_per_cmd=_passes_per_cmd)
+

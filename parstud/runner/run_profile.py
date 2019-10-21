@@ -100,45 +100,62 @@ def prepare_run_database(syscalls, columnspec, passes_per_cmd=1):
     _dicts = []
     for _syscall in syscalls:
         for _i in range(1, passes_per_cmd+1):
-            _dicts.append({'command': _syscall, 'pass no.': _i, \
-                'desired passes': passes_per_cmd})
+            _dicts.append({'command': _syscall, 'pass_no': _i, \
+                'desired_passes': passes_per_cmd})
 
     _run_database = _run_database.append(pandas.DataFrame(_dicts))
     return _run_database
 
 
 def execute_per_run_database(dbpath, rundb, dbfile):
+    _DBFILE = os.path.join(dbpath, dbfile)
     
-    for _rundb_row in runbd.itertuples():
-        # Check if command was run and reported as completed succesfully.
+    for _rundb_row in rundb.itertuples():
+        # Check if command was run and reported as attempted.
         # If true, skip and check next.
-        if _rundb_row['attempted'] is True:
+        if _rundb_row.attempted is True:
             break
+            # Continue?
 
         # Update the database with when command was started and print
         # update to file.
-        rundb.at[_rundb_row.index, 'start time'] = \
+        rundb.at[_rundb_row.Index, 'start_time'] = \
             datetime.datetime.now().isoformat()
-        rundb.to_csv(dbfile)
+        rundb.to_csv(_DBFILE)
 
         # Run system command
+        _cmd_out = ""
         try:
-            _cmd_out = subprocess.check_output(_rundb_row['command'], \
+            # Run the command
+            _cmd_out = subprocess.check_output(_rundb_row.command.split(), \
                stderr=subprocess.STDOUT)
-            rundb.at[_rundb_row.index, 'exit status'] = 0
+            # If no exception indicate succesful run in database   
+            rundb.at[_rundb_row.Index, 'exit_status'] = 0
+        except subprocess.CalledProcessError as _exc:
+            # If unsuccessful execution store the returnceode in database
+            rundb.at[_rundb_row.Index, 'exit_status'] = _exc.returncode
+            # Retrieve the error output from the exception
+            _cmd_out = _exc.output
         except Exception as _exc:
-            rundb.at[_rundb_row.index, 'exit status'] = _exc.returncode
-            # _exc.output?
+            raise _exc
         finally:
-            rundb.to_csv(dbfile)
-            #with open(os.path.
+            # Indicate that the command was attempted in database
+            rundb.at[_rundb_row.Index, 'attempted'] = True
+            rundb.to_csv(_DBFILE)
 
+            # Write output to file
+            _CMDOUTFILE = 'output.{0}'.format(_rundb_row.Index)
+            with open(os.path.join(dbpath, _CMDOUTFILE), mode='w') as f:
+                f.write(os.fsdecode(_cmd_out))
+            rundb.at[_rundb_row.Index, 'stdout_file'] = _CMDOUTFILE
+            rundb.to_csv(_DBFILE)
 
         # Update the database with when command ended and print
         # update to file.
-        rundb.at[_rundb_row.index, 'end time'] = \
+        rundb.at[_rundb_row.Index, 'end_time'] = \
             datetime.datetime.now().isoformat()
-        #rundb.to_csv(dbfile)
+        rundb.to_csv(_DBFILE)
+
 
 
 def run_and_gather_statistics(syscalls, datapath, passes_per_cmd=1, \
@@ -192,9 +209,9 @@ def run_and_gather_statistics(syscalls, datapath, passes_per_cmd=1, \
     #
     # Build database on run configuration and save to file
     _RUNSTATFILE = "runinfo.parstud"
-    _df_columns = ['command', 'start time', 'end time', 
-                   'stdout file', 'stderr file', 'exit status', 'pass no.', 
-                   'desired passes', 'attempded'] 
+    _df_columns = ['command', 'start_time', 'end_time', 
+                   'stdout_file', 'stderr_file', 'exit_status', 'pass_no', 
+                   'desired_passes', 'attempted'] 
     _rundb = prepare_run_database(syscalls, _df_columns, \
         passes_per_cmd=passes_per_cmd)
     _rundb.to_csv(os.path.join(datapath, _RUNSTATFILE))
@@ -202,6 +219,9 @@ def run_and_gather_statistics(syscalls, datapath, passes_per_cmd=1, \
     # If true then the execution step will be skipped
     if buildonly:
         return _rundb
+
+    # Run commands
+    execute_per_run_database(datapath, _rundb, _RUNSTATFILE)
 
 
 if __name__ == "__main__":
