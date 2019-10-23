@@ -24,8 +24,7 @@ def is_os_compatible(osname):
     Raises
     ------
     TypeError
-        If the input is not a string. 
-
+        If the input is not a string.
     """
 
     # Check if osname is a string otherwise raise an error.
@@ -36,7 +35,6 @@ def is_os_compatible(osname):
 
     if 'linux' in _osname:
         return True
-    
     else:
         return False
 
@@ -58,7 +56,7 @@ def generate_syscalls(variations, cmd_string, env_var=False):
 
     Returns
     -------
-    list : 
+    list :
         A list of strings which are to be used as systemcalls to run proceses.
 
     Example
@@ -68,7 +66,6 @@ def generate_syscalls(variations, cmd_string, env_var=False):
 
     >>> generate_syscalls(['\"hello\"', '\"world\"'], "echo $WORLD_VAR", env_var="WORLD_VAR")
     ['export WORLD_VAR="hello" && echo $WORLD_VAR', 'export WORLD_VAR="world" && echo $WORLD_VAR']
-
     """
     _syscalls = []
     for _variation in variations:
@@ -95,13 +92,13 @@ def prepare_run_database(syscalls, columnspec, passes_per_cmd=1):
         raise TypeError("columnspec need to be of type list or tuple")
 
     _run_database = pandas.DataFrame(columns=columnspec)
-    #_run_database = pandas.DataFrame()
+    # _run_database = pandas.DataFrame()
 
     _dicts = []
     for _syscall in syscalls:
         for _i in range(1, passes_per_cmd+1):
-            _dicts.append({'command': _syscall, 'pass_no': _i, \
-                'desired_passes': passes_per_cmd})
+            _dicts.append({'command': _syscall, 'pass_no': _i,
+                           'desired_passes': passes_per_cmd})
 
     _run_database = _run_database.append(pandas.DataFrame(_dicts))
     return _run_database
@@ -109,7 +106,7 @@ def prepare_run_database(syscalls, columnspec, passes_per_cmd=1):
 
 def execute_per_run_database(dbpath, rundb, dbfile):
     _DBFILE = os.path.join(dbpath, dbfile)
-    
+
     for _rundb_row in rundb.itertuples():
         # Check if command was run and reported as attempted.
         # If true, skip and check next.
@@ -127,9 +124,10 @@ def execute_per_run_database(dbpath, rundb, dbfile):
         _cmd_out = ""
         try:
             # Run the command
-            _cmd_out = subprocess.check_output(_rundb_row.command.split(), \
-               stderr=subprocess.STDOUT)
-            # If no exception indicate succesful run in database   
+            _cmd_out = subprocess.check_output(
+                    _rundb_row.command.split(),
+                    stderr=subprocess.STDOUT)
+            # If no exception indicate succesful run in database
             rundb.at[_rundb_row.Index, 'exit_status'] = 0
         except subprocess.CalledProcessError as _exc:
             # If unsuccessful execution store the returnceode in database
@@ -157,9 +155,8 @@ def execute_per_run_database(dbpath, rundb, dbfile):
         rundb.to_csv(_DBFILE)
 
 
-
-def run_and_gather_statistics(syscalls, datapath, passes_per_cmd=1, \
-        buildonly=False):
+def run_and_gather_statistics(syscalls, datapath, passes_per_cmd=1,
+                              buildonly=False):
     # Implement:
     #  --> Takes a path as input for where to write files
     #  --> Take number of passes per command line as input
@@ -172,7 +169,7 @@ def run_and_gather_statistics(syscalls, datapath, passes_per_cmd=1, \
 
     if not os.path.isdir(datapath):
         raise FileNotFoundError
-    
+
     #
     # Add checking if the datapath is writable by script
     #
@@ -182,15 +179,15 @@ def run_and_gather_statistics(syscalls, datapath, passes_per_cmd=1, \
     # add a try-catch statement here
     _LSCPU = ["/usr/bin/lscpu"]
     if os.path.isfile(_LSCPU[0]) and os.access(_LSCPU[0], os.X_OK):
-        _sys_info = os.fsdecode(subprocess.check_output(_LSCPU)) 
+        _sys_info = os.fsdecode(subprocess.check_output(_LSCPU))
     else:
         # Implement optional method later
-        _sys_info = None 
+        _sys_info = None
 
     _SYSINFOFILE = "sysinfo.parstud"
     with open(os.path.join(datapath, _SYSINFOFILE), mode='w') as f:
         f.write(_sys_info)
-   
+
     #
     # Get memory information
     _FREE = ["/usr/bin/free", "--total", "--giga"]
@@ -198,8 +195,8 @@ def run_and_gather_statistics(syscalls, datapath, passes_per_cmd=1, \
         _mem_info = \
             os.fsdecode(subprocess.check_output(_FREE))
     else:
-        # Implement optional method later 
-        _mem_info = None 
+        # Implement optional method later
+        _mem_info = None
 
     _MEMINFOFILE = "meminfo.parstud"
     with open(os.path.join(datapath, _MEMINFOFILE), mode='w') as f:
@@ -209,13 +206,13 @@ def run_and_gather_statistics(syscalls, datapath, passes_per_cmd=1, \
     #
     # Build database on run configuration and save to file
     _RUNSTATFILE = "runinfo.parstud"
-    _df_columns = ['command', 'start_time', 'end_time', 
-                   'stdout_file', 'stderr_file', 'exit_status', 'pass_no', 
-                   'desired_passes', 'attempted'] 
-    _rundb = prepare_run_database(syscalls, _df_columns, \
-        passes_per_cmd=passes_per_cmd)
+    _df_columns = ['command', 'start_time', 'end_time',
+                   'stdout_file', 'stderr_file', 'exit_status', 'pass_no',
+                   'desired_passes', 'attempted']
+    _rundb = prepare_run_database(syscalls, _df_columns,
+                                  passes_per_cmd=passes_per_cmd)
     _rundb.to_csv(os.path.join(datapath, _RUNSTATFILE))
-        
+
     # If true then the execution step will be skipped
     if buildonly:
         return _rundb
@@ -233,8 +230,8 @@ if __name__ == "__main__":
     print(
         os.uname()
     )
-    
-    no_threads = range(1,3)
+
+    no_threads = range(1, 3)
 
     run_cmd = '../cppSource/3DPOD_u.out -i ./input -c output/chronos -m output/mode -p 381600 -v 3 -nm 200 -s 200 -np'
 
