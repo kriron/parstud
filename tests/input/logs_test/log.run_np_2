@@ -1,0 +1,16 @@
+Starting POD routines 
+
+Reading files...				 Done in 120.939s 
+
+Computing projection matrix...			 Done in 31.25s 
+
+Computing eigenvalues and eigenvectors...	 Done in 0.0101777s 
+
+Computing POD modes...				 Done in 56.3495s 
+
+Writing eigenvalues...				 Done in 0.000667767s 
+
+Writing chronos...				 Done in 0.000777157s 
+
+Writing POD modes...				 Done in 10.0602s 
+
