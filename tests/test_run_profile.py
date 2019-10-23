@@ -1,10 +1,9 @@
 import sys
 import os
 import shutil
+import pytest
 
 sys.path.append(os.path.abspath("../parstud/"))
-# from .. import run_profile
-# import run_profile
 from parstud.runner.run_profile import *
 
 
@@ -19,12 +18,14 @@ def test_is_os_compatible():
         assert isinstance(_exc, TypeError)
 
 
-def test_generate_syscalls():
+def test_generate_syscalls_parvar():
     # Assume that the there is a parameter that changes the
     # number of threads to use.
     _out = generate_syscalls([1, 2, 3], "cmd -np")
     assert _out == ["cmd -np 1", "cmd -np 2", "cmd -np 3"]
 
+
+def test_generate_syscalls_envvar():
     # Generate a syscall that sets an environment variable.
     _out = generate_syscalls([1, 2, 3], "cmd_to_run test", env_var="PAR_RUNS")
     assert _out == [
@@ -34,7 +35,7 @@ def test_generate_syscalls():
     ]
 
 
-def test_run_stuff():
+def test_run_stuff_lsedir():
     _curr_path_file = os.path.realpath(__file__)
     _curr_dir = os.path.dirname(_curr_path_file)
 
@@ -46,6 +47,8 @@ def test_run_stuff():
     assert _ls_out == os.fsencode("file1.txt\nfile_2.txt\nwierd_file.txt\n")
     assert os.fsdecode(_ls_out) == "file1.txt\nfile_2.txt\nwierd_file.txt\n"
 
+
+def test_run_stuff_echoenv():
     # Check setting environment variables
     _env_out = run_stuff(["export MY_ENV='hello 2' && echo $MY_ENV"], use_shell=True)
     assert _env_out == b"hello 2\n"
@@ -55,10 +58,10 @@ def test_run_stuff():
 def test_prepare_run_database():
     _rundatabase = prepare_run_database(["cmd1", "cmd2"], ["column1", "column2"])
 
-    try:
+
+def test_prepare_run_database_typeerr():
+    with pytest.raises(TypeError):
         prepare_run_database("cmd", ["column1", "column2"])
-    except Exception as _exc:
-        assert isinstance(_exc, TypeError)
 
 
 def test_run_and_gather_statistics():
