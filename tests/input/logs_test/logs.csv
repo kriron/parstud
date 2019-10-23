@@ -1,0 +1,5 @@
+,Reading files,Computing projection matrix,Computing eigenvalues and eigenvectors,Computing POD modes,Writing eigenvalues,Writing chronos,Writing POD modes
+run_np_1,83.6177,41.2186,0.01123,103.767,0.137683,0.00100487,8.98846
+run_np_2,120.939,31.25,0.0101777,56.3495,0.000667767,0.000777157,10.0602
+run_np_3,91.4659,32.4866,0.0115176,52.9914,0.000593523,0.000420339,6.17181
+run_np_4,110.267,26.345,0.016186,48.6046,0.000780671,0.000591618,6.28949
