@@ -2,9 +2,26 @@ import sys
 import os
 import shutil
 import pytest
+import pandas
+import numpy as np
 
 sys.path.append(os.path.abspath("../parstud/"))
 from parstud.runner.run_profile import *
+
+
+def presistent_relative_dir_helper(base_dir):
+    _testrun = 1
+    _max = 100
+    while _testrun < _max:
+        _output_dir = os.path.join(base_dir, "output/testrun_{0}".format(_testrun))
+
+        # Ensure empty output directory
+        if os.path.isdir(_output_dir):
+            shutil.rmtree(_output_dir)
+        os.mkdir(_output_dir)
+
+        yield _output_dir
+        _testrun = _testrun + 1
 
 
 def test_is_os_compatible():
@@ -12,10 +29,9 @@ def test_is_os_compatible():
     assert is_os_compatible("Linux") == True
     assert is_os_compatible("Linux2") == True
     assert is_os_compatible("Windows") == False
-    try:
+
+    with pytest.raises(TypeError):
         is_os_compatible(123)
-    except Exception as _exc:
-        assert isinstance(_exc, TypeError)
 
 
 def test_generate_syscalls_parvar():
@@ -35,7 +51,7 @@ def test_generate_syscalls_envvar():
     ]
 
 
-def test_run_stuff_lsedir():
+def test_run_stuff_lsexistdir():
     _curr_path_file = os.path.realpath(__file__)
     _curr_dir = os.path.dirname(_curr_path_file)
 
@@ -58,38 +74,91 @@ def test_run_stuff_echoenv():
 def test_prepare_run_database():
     _rundatabase = prepare_run_database(["cmd1", "cmd2"], ["column1", "column2"])
 
+    # Configure database to compare with
+    _df = pandas.DataFrame(columns=["column1", "column2"])
+    _df = _df.append(
+        pandas.DataFrame(
+            [
+                {"command": "cmd1", "desired_passes": 1.0, "pass_no": 1.0},
+                {"command": "cmd2", "desired_passes": 1.0, "pass_no": 1.0},
+            ]
+        ),
+        sort=True,
+    )
+
+    # Use Pandas built-in functionality to perform comparison of dataframes
+    pandas.util.testing.assert_frame_equal(_rundatabase, _df)
+
 
 def test_prepare_run_database_typeerr():
     with pytest.raises(TypeError):
         prepare_run_database("cmd", ["column1", "column2"])
 
 
+# def test_run_and_gather_statistics():
+#    _curr_path_file = os.path.realpath(__file__)
+#    _curr_dir = os.path.dirname(_curr_path_file)
+#    _output_dir = os.path.join(_curr_dir, "output/testrun")
+#
+#    # Ensure empty output directory
+#    if os.path.isdir(_output_dir):
+#        shutil.rmtree(_output_dir)
+#    os.mkdir(_output_dir)
+#
+#    # Run a simple command with existing output dir.
+#    # No execution since buildonly is set to true
+#    run_and_gather_statistics(["cmd"], _output_dir, buildonly=True)
+#
+#
+#    # Run a simple command with non-existant output dir
+#    _err_output_dir = os.path.join(_curr_dir, "output/testrun-nonexist")
+#    try:
+#        run_and_gather_statistics(["cmd"], _output_dir, buildonly=True)
+#    except Exception as _exc:
+#        assert isinstance(_exc, FileNotFoundError)
+#
+#    # Generate syscalls and build run database
+#    _variations = [1, 2, 3, 4, 5]
+#    _basecmd = "par run -np"
+#    _syscalls = generate_syscalls(_variations, _basecmd)
+#    _passes_per_cmd = 3
+#    run_and_gather_statistics(
+#        _syscalls, _output_dir, passes_per_cmd=_passes_per_cmd, buildonly=True
+#    )
+#
+#    # Generate syscalls, build run database and execute commands
+#    _variations = [".", "blargh"]
+#    _basecmd = "/usr/bin/ls"
+#    _syscalls = generate_syscalls(_variations, _basecmd)
+#    _passes_per_cmd = 1
+#    run_and_gather_statistics(_syscalls, _output_dir, passes_per_cmd=_passes_per_cmd)
+
+
 def test_run_and_gather_statistics():
     _curr_path_file = os.path.realpath(__file__)
     _curr_dir = os.path.dirname(_curr_path_file)
-    _output_dir = os.path.join(_curr_dir, "output/testrun")
 
-    # Ensure empty output directory
-    if os.path.isdir(_output_dir):
-        shutil.rmtree(_output_dir)
-    os.mkdir(_output_dir)
+    _output_dir_iter = iter(presistent_relative_dir_helper(_curr_dir))
+    pprint.pprint("")
 
     # Run a simple command with existing output dir.
     # No execution since buildonly is set to true
+    _output_dir = next(_output_dir_iter)
+    pprint.pprint("Using directory: {}".format(_output_dir))
     run_and_gather_statistics(["cmd"], _output_dir, buildonly=True)
 
     # Run a simple command with non-existant output dir
     _err_output_dir = os.path.join(_curr_dir, "output/testrun-nonexist")
-    try:
-        run_and_gather_statistics(["cmd"], _output_dir, buildonly=True)
-    except Exception as _exc:
-        assert isinstance(_exc, FileNotFoundError)
+    with pytest.raises(FileNotFoundError):
+        run_and_gather_statistics(["cmd"], _err_output_dir, buildonly=True)
 
     # Generate syscalls and build run database
     _variations = [1, 2, 3, 4, 5]
     _basecmd = "par run -np"
     _syscalls = generate_syscalls(_variations, _basecmd)
     _passes_per_cmd = 3
+    _output_dir = next(_output_dir_iter)
+    pprint.pprint("Using directory: {}".format(_output_dir))
     run_and_gather_statistics(
         _syscalls, _output_dir, passes_per_cmd=_passes_per_cmd, buildonly=True
     )
@@ -99,4 +168,6 @@ def test_run_and_gather_statistics():
     _basecmd = "/usr/bin/ls"
     _syscalls = generate_syscalls(_variations, _basecmd)
     _passes_per_cmd = 1
+    _output_dir = next(_output_dir_iter)
+    pprint.pprint("Using directory: {}".format(_output_dir))
     run_and_gather_statistics(_syscalls, _output_dir, passes_per_cmd=_passes_per_cmd)

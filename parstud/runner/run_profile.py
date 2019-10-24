@@ -67,6 +67,7 @@ def generate_syscalls(variations, cmd_string, env_var=False):
     >>> generate_syscalls(['\"hello\"', '\"world\"'], "echo $WORLD_VAR", env_var="WORLD_VAR")
     ['export WORLD_VAR="hello" && echo $WORLD_VAR', 'export WORLD_VAR="world" && echo $WORLD_VAR']
     """
+
     _syscalls = []
     for _variation in variations:
         if env_var:
@@ -100,7 +101,7 @@ def prepare_run_database(syscalls, columnspec, passes_per_cmd=1):
             _dicts.append({'command': _syscall, 'pass_no': _i,
                            'desired_passes': passes_per_cmd})
 
-    _run_database = _run_database.append(pandas.DataFrame(_dicts))
+    _run_database = _run_database.append(pandas.DataFrame(_dicts), sort=True)
     return _run_database
 
 
