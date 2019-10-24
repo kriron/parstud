@@ -1,17 +1,20 @@
-import helper as hp
+if __name__== "__main__":
+    import helper
+else:
+    from . import helper
+
 import pandas as pd
 
-pwd = 'tests/input/logs_test/'
+# ------ User input ------
+# Path to log files
+pwd = '../tests/input/logs_test/'
+# Name of the log files, excluding number of cores
 fname = 'log.run_np_'
+# Number of cores
 max_np = 4
+# ------------------------
 
-funcs = hp.read_all_funcs(pwd, fname, max_np)
-times = hp.read_all_times(pwd, fname, max_np)
-rlogs = hp.get_all_logs(pwd, fname, max_np)
-r_idx = [item.replace(pwd+fname[0:4], '') for item in rlogs]
-r_dat = dict(zip(funcs, times))
-
-df = pd.DataFrame(data=r_dat, index=r_idx)
+df = helper.build_database(pwd,fname,max_np)
 
 df.to_csv(pwd+'logs.csv')
 
