@@ -72,7 +72,7 @@ def test_run_stuff_echoenv():
 
 
 def test_prepare_run_database():
-    _rundatabase = prepare_run_database(["cmd1", "cmd2"], ["column1", "column2"])
+    _rundatabase = prepare_run_database(["cmd1", "cmd2"], columnspec=["column1", "column2"])
 
     # Configure database to compare with
     _df = pandas.DataFrame(columns=["column1", "column2"])
@@ -92,7 +92,7 @@ def test_prepare_run_database():
 
 def test_prepare_run_database_typeerr():
     with pytest.raises(TypeError):
-        prepare_run_database("cmd", ["column1", "column2"])
+        prepare_run_database("cmd", columnspec=["column1", "column2"])
 
 
 def test_run_and_gather_statistics():

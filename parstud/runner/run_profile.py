@@ -109,13 +109,15 @@ def run_stuff(syscall, use_shell=False):
     return _cmd_out
 
 
-def prepare_run_database(syscalls, columnspec, passes_per_cmd=1):
+def prepare_run_database(syscalls, columnspec=False, passes_per_cmd=1):
     # Check if syscalls is a list or tuple.
     if not (isinstance(syscalls, list) or isinstance(syscalls, tuple)):
         raise TypeError("syscalls need to be of type list or tuple")
 
-    _run_database = pandas.DataFrame(columns=columnspec)
-    # _run_database = pandas.DataFrame()
+    if columnspec:
+        _run_database = pandas.DataFrame(columns=columnspec)
+    else:
+        _run_database = pandas.DataFrame()
 
     _dicts = []
     for _syscall in syscalls:
@@ -133,10 +135,11 @@ def execute_per_run_database(dbpath, rundb, dbfile):
 
     for _rundb_row in rundb.itertuples():
         # Check if command was run and reported as attempted.
-        # If true, skip and check next.
-        if _rundb_row.attempted is True:
-            break
-            # Continue?
+        # If true, skip and check next. _rundb_row is a named tuple, hence
+        # the existance of the keyword 'attempeted' is assessed by retrieveing
+        # the list of fields in the named tuple.
+        if ('attempted' in _rundb_row._fields) and (_rundb_row.attempted is True):
+            continue
 
         # Update the database with when command was started and print
         # update to file.
@@ -225,18 +228,7 @@ def run_and_gather_statistics(syscalls, datapath, passes_per_cmd=1, buildonly=Fa
     #
     # Build database on run configuration and save to file
     _RUNSTATFILE = "runinfo.parstud"
-    _df_columns = [
-        "command",
-        "start_time",
-        "end_time",
-        "stdout_file",
-        "stderr_file",
-        "exit_status",
-        "pass_no",
-        "desired_passes",
-        "attempted",
-    ]
-    _rundb = prepare_run_database(syscalls, _df_columns, passes_per_cmd=passes_per_cmd)
+    _rundb = prepare_run_database(syscalls, passes_per_cmd=passes_per_cmd)
     _rundb.to_csv(os.path.join(datapath, _RUNSTATFILE))
 
     # If true then the execution step will be skipped
