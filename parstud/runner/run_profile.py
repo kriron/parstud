@@ -1,8 +1,5 @@
-import sys
-import argparse
 import os
 import subprocess
-import pprint
 import pandas
 import datetime
 
@@ -229,7 +226,7 @@ def execute_per_run_database(dbpath, rundb, dbfile):
     Nothing
 
     """
-    
+
     _DBFILE = os.path.join(dbpath, dbfile)
 
     for _rundb_row in rundb.itertuples():
@@ -334,7 +331,6 @@ def run_and_gather_statistics(syscalls, datapath, passes_per_cmd=1, buildonly=Fa
     with open(os.path.join(datapath, _SYSINFOFILE), mode="w") as f:
         f.write(_sys_info)
 
-
     # Get memory information
     _FREE = ["/usr/bin/free", "--total", "--giga"]
     if os.path.isfile(_FREE[0]) and os.access(_FREE[0], os.X_OK):
@@ -346,7 +342,6 @@ def run_and_gather_statistics(syscalls, datapath, passes_per_cmd=1, buildonly=Fa
     _MEMINFOFILE = "meminfo.parstud"
     with open(os.path.join(datapath, _MEMINFOFILE), mode="w") as f:
         f.write(_mem_info)
-
 
     # Build database on run configuration and save to file
     _RUNSTATFILE = "runinfo.parstud"
