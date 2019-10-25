@@ -95,45 +95,6 @@ def test_prepare_run_database_typeerr():
         prepare_run_database("cmd", ["column1", "column2"])
 
 
-# def test_run_and_gather_statistics():
-#    _curr_path_file = os.path.realpath(__file__)
-#    _curr_dir = os.path.dirname(_curr_path_file)
-#    _output_dir = os.path.join(_curr_dir, "output/testrun")
-#
-#    # Ensure empty output directory
-#    if os.path.isdir(_output_dir):
-#        shutil.rmtree(_output_dir)
-#    os.mkdir(_output_dir)
-#
-#    # Run a simple command with existing output dir.
-#    # No execution since buildonly is set to true
-#    run_and_gather_statistics(["cmd"], _output_dir, buildonly=True)
-#
-#
-#    # Run a simple command with non-existant output dir
-#    _err_output_dir = os.path.join(_curr_dir, "output/testrun-nonexist")
-#    try:
-#        run_and_gather_statistics(["cmd"], _output_dir, buildonly=True)
-#    except Exception as _exc:
-#        assert isinstance(_exc, FileNotFoundError)
-#
-#    # Generate syscalls and build run database
-#    _variations = [1, 2, 3, 4, 5]
-#    _basecmd = "par run -np"
-#    _syscalls = generate_syscalls(_variations, _basecmd)
-#    _passes_per_cmd = 3
-#    run_and_gather_statistics(
-#        _syscalls, _output_dir, passes_per_cmd=_passes_per_cmd, buildonly=True
-#    )
-#
-#    # Generate syscalls, build run database and execute commands
-#    _variations = [".", "blargh"]
-#    _basecmd = "/usr/bin/ls"
-#    _syscalls = generate_syscalls(_variations, _basecmd)
-#    _passes_per_cmd = 1
-#    run_and_gather_statistics(_syscalls, _output_dir, passes_per_cmd=_passes_per_cmd)
-
-
 def test_run_and_gather_statistics():
     _curr_path_file = os.path.realpath(__file__)
     _curr_dir = os.path.dirname(_curr_path_file)
@@ -153,6 +114,7 @@ def test_run_and_gather_statistics():
         run_and_gather_statistics(["cmd"], _err_output_dir, buildonly=True)
 
     # Generate syscalls and build run database
+    # No execution since buildonly is set to true
     _variations = [1, 2, 3, 4, 5]
     _basecmd = "par run -np"
     _syscalls = generate_syscalls(_variations, _basecmd)

@@ -33,7 +33,7 @@ def is_os_compatible(osname):
 
     _osname = osname.lower()
 
-    if 'linux' in _osname:
+    if "linux" in _osname:
         return True
     else:
         return False
@@ -51,13 +51,18 @@ def generate_syscalls(variations, cmd_string, env_var=False):
         A list of strings containing the varaitions to append to cmd_string
     cmd_string : string
         The base command string
-    env_var : string
+    env_var : string, optional
         An environment variable to which the variation will be applied
 
     Returns
     -------
     list :
         A list of strings which are to be used as systemcalls to run proceses.
+        
+    Raises
+    ------
+    TypeError
+        If the input is of wrong type.
 
     Example
     -------
@@ -67,6 +72,18 @@ def generate_syscalls(variations, cmd_string, env_var=False):
     >>> generate_syscalls(['\"hello\"', '\"world\"'], "echo $WORLD_VAR", env_var="WORLD_VAR")
     ['export WORLD_VAR="hello" && echo $WORLD_VAR', 'export WORLD_VAR="world" && echo $WORLD_VAR']
     """
+
+    # Check if cmd_string is a string otherwise raise an error.
+    if not isinstance(cmd_string, str):
+        raise TypeError("cmd_string needs to be of type string")
+
+    # Check if variations is a list or tuple.
+    if not (isinstance(variations, list) or isinstance(variations, tuple)):
+        raise TypeError("variations need to be of type list or tuple")
+
+    # Check if osname is set and is a string otherwise raise an error.
+    if env_var and not isinstance(env_var, str):
+        raise TypeError("env_var needs to be of type string")
 
     _syscalls = []
     for _variation in variations:
@@ -80,6 +97,14 @@ def generate_syscalls(variations, cmd_string, env_var=False):
 
 
 def run_stuff(syscall, use_shell=False):
+    """
+    Simple wrapper for subprocess.check_output. Mainly used for testing.
+    
+    Returns
+    -------
+    string
+    """
+
     _cmd_out = subprocess.check_output(syscall, shell=use_shell)
     return _cmd_out
 
@@ -89,17 +114,15 @@ def prepare_run_database(syscalls, columnspec, passes_per_cmd=1):
     if not (isinstance(syscalls, list) or isinstance(syscalls, tuple)):
         raise TypeError("syscalls need to be of type list or tuple")
 
-    if not isinstance(columnspec, list):
-        raise TypeError("columnspec need to be of type list or tuple")
-
     _run_database = pandas.DataFrame(columns=columnspec)
     # _run_database = pandas.DataFrame()
 
     _dicts = []
     for _syscall in syscalls:
-        for _i in range(1, passes_per_cmd+1):
-            _dicts.append({'command': _syscall, 'pass_no': _i,
-                           'desired_passes': passes_per_cmd})
+        for _i in range(1, passes_per_cmd + 1):
+            _dicts.append(
+                {"command": _syscall, "pass_no": _i, "desired_passes": passes_per_cmd}
+            )
 
     _run_database = _run_database.append(pandas.DataFrame(_dicts), sort=True)
     return _run_database
@@ -117,8 +140,7 @@ def execute_per_run_database(dbpath, rundb, dbfile):
 
         # Update the database with when command was started and print
         # update to file.
-        rundb.at[_rundb_row.Index, 'start_time'] = \
-            datetime.datetime.now().isoformat()
+        rundb.at[_rundb_row.Index, "start_time"] = datetime.datetime.now().isoformat()
         rundb.to_csv(_DBFILE)
 
         # Run system command
@@ -126,38 +148,36 @@ def execute_per_run_database(dbpath, rundb, dbfile):
         try:
             # Run the command
             _cmd_out = subprocess.check_output(
-                    _rundb_row.command.split(),
-                    stderr=subprocess.STDOUT)
+                _rundb_row.command.split(), stderr=subprocess.STDOUT
+            )
             # If no exception indicate succesful run in database
-            rundb.at[_rundb_row.Index, 'exit_status'] = 0
+            rundb.at[_rundb_row.Index, "exit_status"] = 0
         except subprocess.CalledProcessError as _exc:
             # If unsuccessful execution store the returnceode in database
-            rundb.at[_rundb_row.Index, 'exit_status'] = _exc.returncode
+            rundb.at[_rundb_row.Index, "exit_status"] = _exc.returncode
             # Retrieve the error output from the exception
             _cmd_out = _exc.output
         except Exception as _exc:
             raise _exc
         finally:
             # Indicate that the command was attempted in database
-            rundb.at[_rundb_row.Index, 'attempted'] = True
+            rundb.at[_rundb_row.Index, "attempted"] = True
             rundb.to_csv(_DBFILE)
 
             # Write output to file
-            _CMDOUTFILE = 'output.{0}'.format(_rundb_row.Index)
-            with open(os.path.join(dbpath, _CMDOUTFILE), mode='w') as f:
+            _CMDOUTFILE = "output.{0}".format(_rundb_row.Index)
+            with open(os.path.join(dbpath, _CMDOUTFILE), mode="w") as f:
                 f.write(os.fsdecode(_cmd_out))
-            rundb.at[_rundb_row.Index, 'stdout_file'] = _CMDOUTFILE
+            rundb.at[_rundb_row.Index, "stdout_file"] = _CMDOUTFILE
             rundb.to_csv(_DBFILE)
 
         # Update the database with when command ended and print
         # update to file.
-        rundb.at[_rundb_row.Index, 'end_time'] = \
-            datetime.datetime.now().isoformat()
+        rundb.at[_rundb_row.Index, "end_time"] = datetime.datetime.now().isoformat()
         rundb.to_csv(_DBFILE)
 
 
-def run_and_gather_statistics(syscalls, datapath, passes_per_cmd=1,
-                              buildonly=False):
+def run_and_gather_statistics(syscalls, datapath, passes_per_cmd=1, buildonly=False):
     # Implement:
     #  --> Takes a path as input for where to write files
     #  --> Take number of passes per command line as input
@@ -186,32 +206,37 @@ def run_and_gather_statistics(syscalls, datapath, passes_per_cmd=1,
         _sys_info = None
 
     _SYSINFOFILE = "sysinfo.parstud"
-    with open(os.path.join(datapath, _SYSINFOFILE), mode='w') as f:
+    with open(os.path.join(datapath, _SYSINFOFILE), mode="w") as f:
         f.write(_sys_info)
 
     #
     # Get memory information
     _FREE = ["/usr/bin/free", "--total", "--giga"]
     if os.path.isfile(_FREE[0]) and os.access(_FREE[0], os.X_OK):
-        _mem_info = \
-            os.fsdecode(subprocess.check_output(_FREE))
+        _mem_info = os.fsdecode(subprocess.check_output(_FREE))
     else:
         # Implement optional method later
         _mem_info = None
 
     _MEMINFOFILE = "meminfo.parstud"
-    with open(os.path.join(datapath, _MEMINFOFILE), mode='w') as f:
+    with open(os.path.join(datapath, _MEMINFOFILE), mode="w") as f:
         f.write(_mem_info)
-
 
     #
     # Build database on run configuration and save to file
     _RUNSTATFILE = "runinfo.parstud"
-    _df_columns = ['command', 'start_time', 'end_time',
-                   'stdout_file', 'stderr_file', 'exit_status', 'pass_no',
-                   'desired_passes', 'attempted']
-    _rundb = prepare_run_database(syscalls, _df_columns,
-                                  passes_per_cmd=passes_per_cmd)
+    _df_columns = [
+        "command",
+        "start_time",
+        "end_time",
+        "stdout_file",
+        "stderr_file",
+        "exit_status",
+        "pass_no",
+        "desired_passes",
+        "attempted",
+    ]
+    _rundb = prepare_run_database(syscalls, _df_columns, passes_per_cmd=passes_per_cmd)
     _rundb.to_csv(os.path.join(datapath, _RUNSTATFILE))
 
     # If true then the execution step will be skipped
@@ -225,16 +250,12 @@ def run_and_gather_statistics(syscalls, datapath, passes_per_cmd=1,
 if __name__ == "__main__":
     is_os_compatible(os.uname().sysname)
 
-    print(
-        'Number of physical CPUS on the system are {0}'.format(os.cpu_count())
-    )
-    print(
-        os.uname()
-    )
+    print("Number of physical CPUS on the system are {0}".format(os.cpu_count()))
+    print(os.uname())
 
     no_threads = range(1, 3)
 
-    run_cmd = '../cppSource/3DPOD_u.out -i ./input -c output/chronos -m output/mode -p 381600 -v 3 -nm 200 -s 200 -np'
+    run_cmd = "../cppSource/3DPOD_u.out -i ./input -c output/chronos -m output/mode -p 381600 -v 3 -nm 200 -s 200 -np"
 
     calls = generate_syscalls(no_threads, run_cmd)
     for call in calls:
@@ -242,15 +263,14 @@ if __name__ == "__main__":
 
     run_stuff(["ls"])
 
-    print('Done')
-
+    print("Done")
 
     #
     # Create and configure an argument parser
     #
-    #parser = argparse.ArgumentParser(
+    # parser = argparse.ArgumentParser(
     #    description = '''Script for performing profiling of the 3DPOD code.''')
-    # parser.add_argument('-d', '--dir', 
+    # parser.add_argument('-d', '--dir',
     #     help = '''Directory containting the time directories.''',
     #     type = post_processing_dir,
     #     required = True)
@@ -264,9 +284,8 @@ if __name__ == "__main__":
     # parser.add_argument('-o', '--out',
     #     help = '''File to store the output from the averaging proces''',
     #     required = True)
-    #parser.add_argument('-r', '--radii',
+    # parser.add_argument('-r', '--radii',
     #    help = '''Define the sampling as <inner radius> <outer radius>''',
     #    nargs = 2,
     #    type = float,
     #    required = True)
-
