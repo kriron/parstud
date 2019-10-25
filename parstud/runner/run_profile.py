@@ -69,7 +69,9 @@ def generate_syscalls(variations, cmd_string, env_var=False):
     >>> generate_syscalls(['\"hello\"', '\"world\"'], 'echo ')
     ['echo  "hello"', 'echo  "world"']
 
-    >>> generate_syscalls(['\"hello\"', '\"world\"'], "echo $WORLD_VAR", env_var="WORLD_VAR")
+    >>> generate_syscalls(['\"hello\"', '\"world\"'],
+                          "echo $WORLD_VAR",
+                          env_var="WORLD_VAR")
     ['export WORLD_VAR="hello" && echo $WORLD_VAR', 'export WORLD_VAR="world" && echo $WORLD_VAR']
     """
 
@@ -99,7 +101,7 @@ def generate_syscalls(variations, cmd_string, env_var=False):
 def run_stuff(syscall, use_shell=False):
     """
     Simple wrapper for subprocess.check_output. Mainly used for testing.
-    
+
     Returns
     -------
     string
@@ -110,9 +112,76 @@ def run_stuff(syscall, use_shell=False):
 
 
 def prepare_run_database(syscalls, columnspec=False, passes_per_cmd=1):
+    """
+    This function can be used to populate a pandas dataFrame object with
+    data to run parameteric studies on system calls. Used internally in this
+    module to achieve just that.
+
+    Parameters
+    ----------
+    syscalls : list or tuple
+        list of systemcalls used for populating the run database.
+
+    columnspec : list or tuple, optional
+        list to use as column specifier for the run database.
+
+    passes_per_cmd : int, optional
+        speciefier on how many times each syscall is going to be executed.
+
+    Returns
+    -------
+    pandas.dataFrame
+        A populated pandas.dataFrame object
+
+    Raises
+    ------
+    TypeError
+        If the input is of wrong type.
+
+    Example
+    -------
+
+    # Example 1
+
+    >>> df = prepare_run_database(["cmd1", "cmd2", "cmd3"], passes_per_cmd=2)
+    >>> type(df)
+    <class 'pandas.core.frame.DataFrame'>
+
+    # Example 2
+
+    >>> prepare_run_database(["cmd1", "cmd2", "cmd3"], passes_per_cmd=2)
+      command  desired_passes  pass_no
+    0    cmd1               2        1
+    1    cmd1               2        2
+    2    cmd2               2        1
+    3    cmd2               2        2
+    4    cmd3               2        1
+    5    cmd3               2        2
+
+    # Example 3
+
+    >>> prepare_run_database(["cmd1", "cmd2", "cmd3"], 
+                             columnspec=["cmdinfo1", "cmdinfo2"],
+                             passes_per_cmd=2)
+      cmdinfo1 cmdinfo2 command  desired_passes  pass_no
+    0      NaN      NaN    cmd1             2.0      1.0
+    1      NaN      NaN    cmd1             2.0      2.0
+    2      NaN      NaN    cmd2             2.0      1.0
+    3      NaN      NaN    cmd2             2.0      2.0
+    4      NaN      NaN    cmd3             2.0      1.0
+    5      NaN      NaN    cmd3             2.0      2.0
+
+    """
+
     # Check if syscalls is a list or tuple.
     if not (isinstance(syscalls, list) or isinstance(syscalls, tuple)):
         raise TypeError("syscalls need to be of type list or tuple")
+
+    if columnspec and not (isinstance(syscalls, list) or isinstance(syscalls, tuple)):
+        raise TypeError("columnspec needs to be of type string")
+
+    if not (isinstance(passes_per_cmd, int) or passes_per_cmd < 1):
+        raise TypeError("passes_per_cmd need to be of type int and 1 or larger")
 
     if columnspec:
         _run_database = pandas.DataFrame(columns=columnspec)
@@ -131,6 +200,36 @@ def prepare_run_database(syscalls, columnspec=False, passes_per_cmd=1):
 
 
 def execute_per_run_database(dbpath, rundb, dbfile):
+    """
+    Takes a pandas dataFrame object and executes what is liste in the 'commands'
+    column as system calls. Writes the command outputs to persistent storage in
+    for later digestion.
+
+    A suitable run database can be generated with the `prepare_run_database`
+    function.
+    
+    Parameters
+    ----------
+    dbpath : string
+        path to location on peristent storage where the run database is stored
+    
+    rundb : pandas.dataFrame
+        pandas dataFrame object containning the run configuration
+        
+    dbfile : string
+        name of the file where the rundb dataFrame is written to 
+        (located in dbpath)
+
+    Returns
+    -------
+    Nothing
+    
+    Raises
+    ------
+    Nothing
+
+    """
+    
     _DBFILE = os.path.join(dbpath, dbfile)
 
     for _rundb_row in rundb.itertuples():
@@ -138,7 +237,7 @@ def execute_per_run_database(dbpath, rundb, dbfile):
         # If true, skip and check next. _rundb_row is a named tuple, hence
         # the existance of the keyword 'attempeted' is assessed by retrieveing
         # the list of fields in the named tuple.
-        if ('attempted' in _rundb_row._fields) and (_rundb_row.attempted is True):
+        if ("attempted" in _rundb_row._fields) and (_rundb_row.attempted is True):
             continue
 
         # Update the database with when command was started and print
@@ -181,15 +280,39 @@ def execute_per_run_database(dbpath, rundb, dbfile):
 
 
 def run_and_gather_statistics(syscalls, datapath, passes_per_cmd=1, buildonly=False):
-    # Implement:
-    #  --> Takes a path as input for where to write files
-    #  --> Take number of passes per command line as input
-    #  --> Print os & machine information statistics to file
-    #  --> Populate the database with successful run and desired passes
-    #  --> Add column with exit status
-    #  --> Name file names with e.g. <run no>.<desired run no>
-    #  Put std err in file
-    #  Put std out in file
+    """
+    Function that will configure a run database and execute the system calls of
+    the database. Will store system information in the folder specified by
+    datapath together with the run database.
+
+    If buildonly=True, will return the generated run database as a pandas
+    DataFrame object and skip execution.
+
+    Parameters
+    ----------
+    syscalls : list or tuple
+        list of systemcalls used for populating the run database.
+
+    dbpath : string
+        path to location on peristent storage where the run database is stored
+
+    passes_per_cmd : int, optional
+        speciefier on how many times each syscall is going to be executed.
+
+    buildonly : boolean, optional
+        dictates if all system commands will be run after gathering system
+        information and construction of run database. Default is False.
+
+    Returns
+    -------
+    pandas.DataFrame
+        When buildonly=True, otherwise nothing.
+
+    Raises
+    ------
+    FileNotFoundError
+        If dbpath does not exist.
+    """
 
     if not os.path.isdir(datapath):
         raise FileNotFoundError
@@ -198,7 +321,6 @@ def run_and_gather_statistics(syscalls, datapath, passes_per_cmd=1, buildonly=Fa
     # Add checking if the datapath is writable by script
     #
 
-    #
     # Get CPU information
     # add a try-catch statement here
     _LSCPU = ["/usr/bin/lscpu"]
@@ -212,7 +334,7 @@ def run_and_gather_statistics(syscalls, datapath, passes_per_cmd=1, buildonly=Fa
     with open(os.path.join(datapath, _SYSINFOFILE), mode="w") as f:
         f.write(_sys_info)
 
-    #
+
     # Get memory information
     _FREE = ["/usr/bin/free", "--total", "--giga"]
     if os.path.isfile(_FREE[0]) and os.access(_FREE[0], os.X_OK):
@@ -225,7 +347,7 @@ def run_and_gather_statistics(syscalls, datapath, passes_per_cmd=1, buildonly=Fa
     with open(os.path.join(datapath, _MEMINFOFILE), mode="w") as f:
         f.write(_mem_info)
 
-    #
+
     # Build database on run configuration and save to file
     _RUNSTATFILE = "runinfo.parstud"
     _rundb = prepare_run_database(syscalls, passes_per_cmd=passes_per_cmd)
