@@ -1,3 +1,4 @@
+import sys
 import argparse
 from runner.run_profile import *
 
@@ -23,6 +24,36 @@ def directory(string):
     return string
 
 
+# Function for checking, creating and/or cleaning the desired output dir.
+def check_output_directory(dirstring, force=False):
+    if os.path.isdir(dirstring) == False:
+        msg = "Creating output directory '{0!s}'".format(dirstring)
+        # print(msg)
+        os.makedirs(dirstring)
+
+    if os.path.isdir(dirstring) == True and not os.listdir(dirstring):
+        msg = "Using empty directory '{0!s}' for output".format(dirstring)
+        # print(msg)
+
+    if os.path.isdir(dirstring) == True and os.listdir(dirstring):
+        msg = "Directory '{0!s}' is not empty".format(dirstring)
+        # print(msg)
+
+        if force:
+            msg = "Forcing use of {0!s}! Cleaning directory...".format(dirstring)
+            # print(msg)
+            for _file in os.listdir(dirstring):
+                os.remove(os.path.join(dirstring, _file))
+
+        if not force:
+            msg = "Directory {0!s} is not empty.\n    Add flag -fd/--forcedirectory to force cleaning and usage of directory".format(
+                dirstring
+            )
+            raise FileExistsError(msg)
+
+    return dirstring
+
+
 if __name__ == "__main__":
     print("This is currently work in progress. Check back later.")
 
@@ -34,11 +65,22 @@ if __name__ == "__main__":
         "-d",
         "--dir",
         help="""Directory where to store the run output.""",
-        type=directory,
+        # type=directory,
         required=True,
     )
     parser.add_argument(
-        "-s", "--systemcall", help="""Base system call to be varied.""", type=str
+        "-fd",
+        "--forcedirectory",
+        dest="forcedir",
+        help="""Force usage of output directory. WARNING: This will wipe the specified drectory clean""",
+        action="store_true",
+    )
+    parser.add_argument(
+        "-s",
+        "--systemcall",
+        help="""Base system call to be varied.""",
+        type=str,
+        required=True,
     )
     parser.add_argument(
         "-v",
@@ -58,4 +100,12 @@ if __name__ == "__main__":
     )
 
     args = parser.parse_args()
+
+    # Check the desired output directory for existance and emptyness
+    try:
+        check_output_directory(args.dir, force=args.forcedir)
+    except FileExistsError as _exc:
+        print(_exc)
+        sys.exit(1)
+
     run_study(args)
