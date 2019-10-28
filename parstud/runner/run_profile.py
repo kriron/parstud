@@ -276,7 +276,7 @@ def execute_per_run_database(dbpath, rundb, dbfile):
             rundb.to_csv(_DBFILE)
 
             # Write output to file
-            _CMDOUTFILE = "output.{0}".format(_rundb_row.Index)
+            _CMDOUTFILE = "output_{0}.txt".format(_rundb_row.Index)
             with open(os.path.join(dbpath, _CMDOUTFILE), mode="w") as f:
                 f.write(os.fsdecode(_cmd_out))
             rundb.at[_rundb_row.Index, "stdout_file"] = _CMDOUTFILE
@@ -339,7 +339,7 @@ def run_and_gather_statistics(syscalls, datapath, passes_per_cmd=1, buildonly=Fa
         # Implement optional method later
         _sys_info = None
 
-    _SYSINFOFILE = "sysinfo.parstud"
+    _SYSINFOFILE = "sysinfo_parstud.txt"
     with open(os.path.join(datapath, _SYSINFOFILE), mode="w") as f:
         f.write(_sys_info)
 
@@ -351,12 +351,12 @@ def run_and_gather_statistics(syscalls, datapath, passes_per_cmd=1, buildonly=Fa
         # Implement optional method later
         _mem_info = None
 
-    _MEMINFOFILE = "meminfo.parstud"
+    _MEMINFOFILE = "meminfo_parstud.txt"
     with open(os.path.join(datapath, _MEMINFOFILE), mode="w") as f:
         f.write(_mem_info)
 
     # Build database on run configuration and save to file
-    _RUNSTATFILE = "runinfo.parstud"
+    _RUNSTATFILE = "runinfo_parstud.csv"
     _rundb = prepare_run_database(syscalls, passes_per_cmd=passes_per_cmd)
     _rundb.to_csv(os.path.join(datapath, _RUNSTATFILE))
 
