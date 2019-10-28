@@ -44,7 +44,7 @@ def generate_syscalls(variations, cmd_string, env_var=False):
 
     Parameters
     ----------
-    variations : list
+    variations : list or None
         A list of strings containing the varaitions to append to cmd_string
     cmd_string : string
         The base command string
@@ -77,7 +77,11 @@ def generate_syscalls(variations, cmd_string, env_var=False):
         raise TypeError("cmd_string needs to be of type string")
 
     # Check if variations is not None, if so if it is a list or tuple.
-    if not (variations == None or isinstance(variations, list) or isinstance(variations, tuple)):
+    if not (
+        variations == None
+        or isinstance(variations, list)
+        or isinstance(variations, tuple)
+    ):
         raise TypeError("variations need to be either 'None' or of type list or tuple")
 
     # Check if env_var is set and is a string otherwise raise an error.
@@ -85,12 +89,12 @@ def generate_syscalls(variations, cmd_string, env_var=False):
         raise TypeError("env_var needs to be of type string")
 
     _syscalls = []
-    
-    # If no variation is specified, just returns the system call as a 
+
+    # If no variation is specified, just returns the cmd_string as a
     # one-element list
-    if variations==None:
+    if variations == None:
         _syscalls.append(cmd_string)
-        
+
     else:
         for _variation in variations:
             if env_var:
@@ -99,7 +103,7 @@ def generate_syscalls(variations, cmd_string, env_var=False):
             else:
                 _syscall = "{0:s} {1}".format(cmd_string, _variation)
             _syscalls.append(_syscall)
-            
+
     return _syscalls
 
 
