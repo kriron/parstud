@@ -20,127 +20,50 @@ def read_log(dir, flag_is_time):
             for line in reader:
                 if str_t in line:
                     return_list.append(float(line[line.find(str_t) + len(str_t) : -3]))
-        return return_list
     elif flag_is_time == 0:
         str_f = "..."
         with open(dir, "r") as reader:
             for line in reader:
                 if str_f in line:
                     return_list.append(line[0 : line.find(str_f)])
-        return return_list
     else:
         print("Error: flag_is_time must be either 1 (time data) or 0 (function data)")
+    return return_list
 
 
-def get_log(pwd, fname, np):
+def build_database(path, name):
     """
-    Returns string for the 3DPOD log file for a given number of processors.
+    Returns returns database as dataFrame based on 3DPOD log files.
 
     Parameters
     ----------
     pwd     :   string    
-        Path to log file from current working directory
-    fname   :   string
-        Name of the log file, excluding the number of processor used in run.
-    np      :   int
-        Number of processors.
+        Path to log files
+    name   :   string
+        Name of the run info csv file
     """
-    log = pwd + fname + str(np)
-    return log
 
+    info = pd.read_csv(path + name)
 
-def read_all_funcs(pwd, fname, np):
-    """
-    Returns list of strings for all function data in 3DPOD log files up to a given number of maximum processors.
+    nproc = info.command.str.split().str[-1]  # Number of processors
+    fname = info.stdout_file  # File names
+    npass = info.pass_no  # Pass number
 
-    Parameters
-    ----------
-    pwd     :   string    
-        Path to log file from current working directory
-    fname   :   string
-        Name of the log file, excluding the number of processor used in run.
-    np      :   int
-        Number of processors.
-    """
-    funcs = read_log(get_log(pwd, fname, np), 0)
-    return funcs
-
-
-def get_all_logs(pwd, fname, max_np):
-    """
-    Returns list of strings for all the 3DPOD log files up to a given number of maximum processors.
-
-    Parameters
-    ----------
-    pwd     :   string    
-        Path to log file from current working directory
-    fname   :   string
-        Name of the log file, excluding the number of processor used in run.
-    max_np  :   int
-        Maximum number of processors.
-    """
-    logs = []
-    for i in range(1, max_np + 1):
-        logs.append(get_log(pwd, fname, i))
-    return logs
-
-
-def read_all_times(pwd, fname, max_np):
-    """
-    Returns list of floats for all time data in 3DPOD log files up to a given number of maximum processors.
-
-    Parameters
-    ----------
-    pwd     :   string    
-        Path to log file from current working directory
-    fname   :   string
-        Name of the log file, excluding the number of processor used in run.
-    max_np  :   int
-        Maximum number of processors.
-    """
+    funcs = read_log(path + fname[1], 0)
     times = []
-    logs = get_all_logs(pwd, fname, max_np)
-    for i in range(1, max_np + 1):
-        times.append(read_log(logs[i - 1], 1))
-    # Reashape times list of lists by transposing it
-    times = list(map(list, zip(*times)))
-    return times
 
+    for i in range(len(info.index)):
+        times.append(read_log(path + fname[i], 1))
 
-def build_database(pwd, fname, max_np):
-    """
-    Returns returns database as dataFrame based on 3DPOD log files up to a given number of maximum processors.
-
-    Parameters
-    ----------
-    pwd     :   string    
-        Path to log file from current working directory
-    fname   :   string
-        Name of the log file, excluding the number of processor used in run.
-    max_np  :   int
-        Maximum number of processors.
-    """
-    funcs = read_all_funcs(pwd, fname, max_np)
-    times = read_all_times(pwd, fname, max_np)
-    rlogs = get_all_logs(pwd, fname, max_np)
-    r_idx = [item.replace(pwd + fname[0:4], "") for item in rlogs]
-    r_dat = dict(zip(funcs, times))
-    df = pd.DataFrame(data=r_dat, index=r_idx)
+    df = pd.DataFrame(data=times, columns=funcs, index=fname)
+    df["Number of processors"] = nproc.values
+    df["Pass number"] = npass.values
     return df
 
 
 if __name__ == "__main__":
-    # ------ User input ------
-    # Path to log files
-    pwd = "tests/input/logs_test/"
-    # Name of the log files, excluding number of cores
-    fname = "log.run_np_"
-    # Number of cores
-    max_np = 4
-    # ------------------------
+    name = "runinfo.parstud"
+    path = "tests/input/run_test/out_1/"
 
-    df = build_database(pwd, fname, max_np)
-
-    df.to_csv(pwd + "logs.csv")
-
-    print(df)
+    df = build_database(path, name)
+    df.to_csv(path + "logs.csv")
