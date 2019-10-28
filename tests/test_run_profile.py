@@ -4,6 +4,7 @@ import shutil
 import pytest
 import pandas
 import numpy as np
+import pprint
 
 sys.path.append(os.path.abspath("../parstud/"))
 from parstud.runner.run_profile import *
@@ -50,6 +51,12 @@ def test_generate_syscalls_envvar():
         "export PAR_RUNS=3 && cmd_to_run test",
     ]
 
+
+def test_generate_syscalls_novar():
+    # Assume that there are no variations specified
+    _out = generate_syscalls(None, "cmd -np")
+    assert _out == ["cmd -np"]
+    
 
 def test_run_stuff_lsexistdir():
     _curr_path_file = os.path.realpath(__file__)

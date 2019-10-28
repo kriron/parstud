@@ -6,10 +6,11 @@ from runner.run_profile import *
 # generate_syscalls(variations, cmd_string, env_var=False)
 # run_and_gather_statistics(syscalls, datapath, passes_per_cmd=1, buildonly=False):
 
-def run_study(args):    
+
+def run_study(args):
     _syscalls = generate_syscalls(args.variations, args.systemcall)
     _passes = args.passes[0]
-    run_and_gather_statistics(_syscalls, args.dir, _passes, buildonly=False)    
+    run_and_gather_statistics(_syscalls, args.dir, _passes, buildonly=False)
 
 
 # ---
@@ -45,6 +46,7 @@ if __name__ == "__main__":
         help="""Variations to be applied to base system call""",
         nargs="*",
         type=str,
+        default=None,
     )
     parser.add_argument(
         "-p",

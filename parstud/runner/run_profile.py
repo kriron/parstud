@@ -76,22 +76,30 @@ def generate_syscalls(variations, cmd_string, env_var=False):
     if not isinstance(cmd_string, str):
         raise TypeError("cmd_string needs to be of type string")
 
-    # Check if variations is a list or tuple.
-    if not (isinstance(variations, list) or isinstance(variations, tuple)):
-        raise TypeError("variations need to be of type list or tuple")
+    # Check if variations is not None, if so if it is a list or tuple.
+    if not (variations == None or isinstance(variations, list) or isinstance(variations, tuple)):
+        raise TypeError("variations need to be either 'None' or of type list or tuple")
 
-    # Check if osname is set and is a string otherwise raise an error.
+    # Check if env_var is set and is a string otherwise raise an error.
     if env_var and not isinstance(env_var, str):
         raise TypeError("env_var needs to be of type string")
 
     _syscalls = []
-    for _variation in variations:
-        if env_var:
-            _set_var_cmd = "export {0:s}={1} &&".format(env_var, _variation)
-            _syscall = "{0:s} {1}".format(_set_var_cmd, cmd_string)
-        else:
-            _syscall = "{0:s} {1}".format(cmd_string, _variation)
-        _syscalls.append(_syscall)
+    
+    # If no variation is specified, just returns the system call as a 
+    # one-element list
+    if variations==None:
+        _syscalls.append(cmd_string)
+        
+    else:
+        for _variation in variations:
+            if env_var:
+                _set_var_cmd = "export {0:s}={1} &&".format(env_var, _variation)
+                _syscall = "{0:s} {1}".format(_set_var_cmd, cmd_string)
+            else:
+                _syscall = "{0:s} {1}".format(cmd_string, _variation)
+            _syscalls.append(_syscall)
+            
     return _syscalls
 
 
