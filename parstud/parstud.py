@@ -1,4 +1,5 @@
 import sys
+import errno
 import argparse
 from runner.run_profile import *
 
@@ -105,7 +106,8 @@ if __name__ == "__main__":
     try:
         check_output_directory(args.dir, force=args.forcedir)
     except FileExistsError as _exc:
+        parser.print_usage()
         print(_exc)
-        sys.exit(1)
+        sys.exit(errno.EEXIST)
 
     run_study(args)
