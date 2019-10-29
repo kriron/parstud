@@ -62,8 +62,7 @@ def build_database(path, name):
 
 
 if __name__ == "__main__":
-    name = "runinfo.parstud"
     path = "tests/input/run_test/out_1/"
-
+    name = "runinfo.parstud"
     df = build_database(path, name)
     df.to_csv(path + "logs.csv")
