@@ -23,7 +23,6 @@ def presistent_relative_dir_helper(base_dir):
         # Ensure empty output directory
         if os.path.isdir(_output_dir):
             shutil.rmtree(_output_dir)
-        # os.mkdir(_output_dir)
         os.makedirs(_output_dir)
 
         yield _output_dir
@@ -61,7 +60,7 @@ def test_generate_syscalls_novar():
     # Assume that there are no variations specified
     _out = generate_syscalls(None, "cmd -np")
     assert _out == ["cmd -np"]
-    
+
 
 def test_run_stuff_lsexistdir():
     _curr_path_file = os.path.realpath(__file__)
@@ -84,7 +83,9 @@ def test_run_stuff_echoenv():
 
 
 def test_prepare_run_database():
-    _rundatabase = prepare_run_database(["cmd1", "cmd2"], columnspec=["column1", "column2"])
+    _rundatabase = prepare_run_database(
+        ["cmd1", "cmd2"], columnspec=["column1", "column2"]
+    )
 
     # Configure database to compare with
     _df = pandas.DataFrame(columns=["column1", "column2"])
