@@ -62,28 +62,38 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(
         description="""Script for performing parametric runs on system commands."""
     )
-    parser.add_argument(
+
+    subparsers = parser.add_subparsers(
+        title="Subcommands",
+        description="Commands for running, collecting and plotting data",
+        help="Additional help",
+    )
+
+    # Add subparsers
+    runner = subparsers.add_parser("run")
+
+    runner.add_argument(
         "-d",
         "--dir",
         help="""Directory where to store the run output.""",
         # type=directory,
         required=True,
     )
-    parser.add_argument(
+    runner.add_argument(
         "-fd",
         "--forcedirectory",
         dest="forcedir",
         help="""Force usage of output directory. WARNING: This will wipe the specified drectory clean""",
         action="store_true",
     )
-    parser.add_argument(
+    runner.add_argument(
         "-s",
         "--systemcall",
         help="""Base system call to be varied.""",
         type=str,
         required=True,
     )
-    parser.add_argument(
+    runner.add_argument(
         "-v",
         "--variations",
         help="""Variations to be applied to base system call""",
@@ -91,7 +101,7 @@ if __name__ == "__main__":
         type=str,
         default=None,
     )
-    parser.add_argument(
+    runner.add_argument(
         "-p",
         "--passes",
         help="""Number of passes per systemcall variation.""",
@@ -101,6 +111,13 @@ if __name__ == "__main__":
     )
 
     args = parser.parse_args()
+
+    # Check if the parser returned a Namespace object without any content.
+    # And if so, print the help.
+    if not vars(args):
+        parser.print_help()
+        # Retrun invalid argument error code
+        sys.exit(errno.EINVAL)
 
     # Check the desired output directory for existance and emptyness
     try:
