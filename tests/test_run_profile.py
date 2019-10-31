@@ -15,11 +15,16 @@ def presistent_relative_dir_helper(base_dir):
     _max = 100
     while _testrun < _max:
         _output_dir = os.path.join(base_dir, "output/testrun_{0}".format(_testrun))
+        # Added the absolute path check since, according to the documentation,
+        # os.makedirs() can get confused by relative paths
+        if not os.path.isabs(_output_dir):
+            _output_dir = os.path.abspath(_output_dir)
 
         # Ensure empty output directory
         if os.path.isdir(_output_dir):
             shutil.rmtree(_output_dir)
-        os.mkdir(_output_dir)
+        # os.mkdir(_output_dir)
+        os.makedirs(_output_dir)
 
         yield _output_dir
         _testrun = _testrun + 1
