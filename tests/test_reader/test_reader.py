@@ -18,6 +18,9 @@ def test_read_log():
     assert isinstance(funcs[0], str)
     assert isinstance(times[0], float)
 
+    assert len(times) == 7
+    assert len(funcs) == len(times)
+
     with pytest.raises(TypeError):
         read_log(path, "123")
     with pytest.raises(ValueError):
@@ -30,9 +33,12 @@ def test_build_database():
     path = "tests/test_reader/input/out_test/"
     name = "runinfo.parstud"
 
+    num_lines = sum(1 for line in open(path+name)) - 1
+
     df = build_database(path, name)
 
     assert isinstance(df, pd.DataFrame)
+    assert len(df.index) == num_lines
 
     bad_path = "nonexistant-folder/"
     bad_name = "nonexistant-name"
