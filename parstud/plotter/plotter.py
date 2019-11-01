@@ -81,14 +81,14 @@ def piechart_plot(df, path, ext):
 
 if __name__ == "__main__":
 
-    path = "tests/input/run_test/out_1/"
+    path = "tests/input/run_test/out_3/"
     name = "logs.csv"
     df = pd.read_csv(path + name)
 
     plt.style.use("seaborn-colorblind")
 
     extension = "pdf"
-    path = "tests/input/run_test/fig/"
+    path = "tests/input/run_test/fig_3/"
     error_plot(df, path, extension)
     piechart_plot(df, path, extension)
 
