@@ -3,26 +3,6 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 
-def plot_generic():
-    plt.figure()
-    for i in range(1, 8):
-        plt.plot(df.stdout_file, df.iloc[:, i], label=df.columns[i])
-    plt.ylabel("time [s]")
-    plt.legend()
-    plt.show()
-
-
-def box_plot():
-    np_list = list(set(df.iloc[:, -2]))
-
-    for j in range(3):
-        df_filt = df[df.iloc[:, -2] == np_list[j]]
-        for i in range(1, 8):
-            plt.subplot(3, 7, i + (j * 7))
-            plt.boxplot(df_filt.iloc[:, i])
-    plt.show()
-
-
 def error_plot(df, path, ext):
     df_no_obj = df.iloc[:, 1:-1]  # Quantile method raises error for obj types
     mean = df_no_obj.groupby("Number of processors").mean()
@@ -34,7 +14,8 @@ def error_plot(df, path, ext):
         (_, caps, _) = plt.errorbar(
             mean.index,
             mean.iloc[:, i],
-            yerr=[mean.iloc[:, i] - p025.iloc[:, i], p975.iloc[:, i] - mean.iloc[:, i]],
+            yerr=[mean.iloc[:, i] - p025.iloc[:, i],
+                  p975.iloc[:, i] - mean.iloc[:, i]],
             linestyle="-",
             fmt="o",
             markersize=8,
@@ -45,7 +26,8 @@ def error_plot(df, path, ext):
         plt.title(mean.columns[i])
         plt.ylabel("Time [s]")
         plt.xlabel("Number of processors")
-        plt.savefig(path + "errorbar_" + str(i) + "." + ext, bbox_inches="tight")
+        plt.savefig(path + "errorbar_" + str(i) +
+                    "." + ext, bbox_inches="tight")
 
 
 def reduce_df(df):
@@ -74,13 +56,15 @@ def piechart_plot(df, path, ext):
         shadow=True,
         startangle=90,
     )
-    ax1.axis("equal")  # Equal aspect ratio ensures that pie is drawn as a circle.
+    # Equal aspect ratio ensures that pie is drawn as a circle.
+    ax1.axis("equal")
     plt.title("Average time distribution for 3DPOD of 200 snapshots")
     plt.savefig(path + "piechart." + ext, bbox_inches="tight")
 
 
 if __name__ == "__main__":
-
+    # WIP, kept here as comment for reference of usage
+    """
     path = "tests/input/run_test/out_3/"
     name = "logs.csv"
     df = pd.read_csv(path + name)
@@ -91,4 +75,4 @@ if __name__ == "__main__":
     path = "tests/input/run_test/fig_3/"
     error_plot(df, path, extension)
     piechart_plot(df, path, extension)
-
+    """
