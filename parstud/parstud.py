@@ -1,7 +1,9 @@
+import os
 import sys
 import errno
 import argparse
 from runner.run_profile import *
+from reader.reader import *
 
 
 # execute_per_run_database(dbpath, rundb, dbfile):
@@ -10,19 +12,48 @@ from runner.run_profile import *
 
 
 def run_study(args):
+    # Check the desired output directory for existance and emptyness
+    try:
+        check_output_directory(args.dir, force=args.forcedir)
+    except FileExistsError as _exc:
+        parser.print_usage()
+        print(_exc)
+        sys.exit(errno.EEXIST)
+
     _syscalls = generate_syscalls(args.variations, args.systemcall)
     _passes = args.passes[0]
     run_and_gather_statistics(_syscalls, args.dir, _passes, buildonly=False)
 
 
+def read_database_and_gather_data(args):
+    if not os.path.isdir(args.idir):
+        msg = "'{0!s}' is not an existing directory".format(args.idir)
+        raise FileNotFoundError(msg)
+
+    _dbf = os.path.join(args.idir, args.dbf)
+    if not os.path.exists(_dbf):
+        msg = "'{0!s}' does not exist".format(_dbf)
+        raise FileNotFoundError(msg)
+
+    _reader_df = build_database(args.idir, args.dbf)
+    print(_reader_df)
+    # print(args)
+    pass
+
+
+def plot_logfile(args):
+    raise NotImplementedError("Plotter not integrated yet.")
+
+
 # ---
 
 # Function for checking if a directory is valid.
-def directory(string):
-    if os.path.isdir(string) == False:
-        msg = "'{0!s}' is not an existing directory".format(string)
+def directory(dirstring):
+    if os.path.isdir(dirstring) == False:
+        msg = "'{0!s}' is not an existing directory".format(dirstring)
         raise argparse.ArgumentTypeError(msg)
-    return string
+
+    return dirstring
 
 
 # Function for checking, creating and/or cleaning the desired output dir.
@@ -56,8 +87,6 @@ def check_output_directory(dirstring, force=False):
 
 
 if __name__ == "__main__":
-    print("This is currently work in progress. Check back later.")
-
     # Create and configure an argument parser
     parser = argparse.ArgumentParser(
         description="""Script for performing parametric runs on system commands."""
@@ -71,14 +100,16 @@ if __name__ == "__main__":
 
     # Add subparsers
     runner = subparsers.add_parser("run")
+    runner.set_defaults(func=run_study)
 
-    runner.add_argument(
-        "-d",
-        "--dir",
-        help="""Directory where to store the run output.""",
-        # type=directory,
-        required=True,
-    )
+    reader = subparsers.add_parser("read")
+    reader.set_defaults(func=read_database_and_gather_data)
+
+    plotter = subparsers.add_parser("plot")
+    plotter.set_defaults(func=plot_logfile)
+
+    # Configure the subparser for runner
+    runner.add_argument("dir", help="""Directory where to store the run output.""")
     runner.add_argument(
         "-fd",
         "--forcedirectory",
@@ -87,11 +118,7 @@ if __name__ == "__main__":
         action="store_true",
     )
     runner.add_argument(
-        "-s",
-        "--systemcall",
-        help="""Base system call to be varied.""",
-        type=str,
-        required=True,
+        "systemcall", help="""Base system call to be varied.""", type=str
     )
     runner.add_argument(
         "-v",
@@ -110,6 +137,17 @@ if __name__ == "__main__":
         type=int,
     )
 
+    # Configure the subparser for reader
+    reader.add_argument(
+        "idir", help="""Directory where the databse and run output to read is stored."""
+    )
+    reader.add_argument(
+        "-dbf",
+        help="""Run database file name""",
+        type=str,
+        default="runinfo_parstud.csv",
+    )
+
     args = parser.parse_args()
 
     # Check if the parser returned a Namespace object without any content.
@@ -119,12 +157,6 @@ if __name__ == "__main__":
         # Retrun invalid argument error code
         sys.exit(errno.EINVAL)
 
-    # Check the desired output directory for existance and emptyness
-    try:
-        check_output_directory(args.dir, force=args.forcedir)
-    except FileExistsError as _exc:
-        parser.print_usage()
-        print(_exc)
-        sys.exit(errno.EEXIST)
-
-    run_study(args)
+    # Execute the function associte with the subparser configured
+    # above where the subparsers are added.
+    args.func(args)
