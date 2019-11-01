@@ -14,7 +14,7 @@ def read_log(dir, flag_is_time):
     """
     return_list = []
 
-    if not isinstance(flag_is_time,int):
+    if not isinstance(flag_is_time, int):
         raise TypeError(
             "flag_is_time must be an integer (either 0 (for function data) or 1 (for time data) )"
         )
