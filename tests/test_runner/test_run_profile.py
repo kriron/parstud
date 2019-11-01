@@ -6,7 +6,7 @@ import pandas
 import numpy as np
 import pprint
 
-sys.path.append(os.path.abspath("../parstud/"))
+#sys.path.append(os.path.abspath("../parstud/"))
 from parstud.runner.run_profile import *
 
 
