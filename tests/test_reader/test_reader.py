@@ -5,9 +5,22 @@ import os
 import pytest
 import pandas
 
-sys.path.append(os.path.abspath("../parstud/"))
+# sys.path.append(os.path.abspath("../parstud/"))
 
 
-def test_template():
+def test_read_log():
+    path = "tests/test_reader/input/out_test/output.0"
+
+    funcs = read_log(path, 0)
+    times = read_log(path, 1)
+
+    assert isinstance(funcs, list) == True
+    assert isinstance(times, list) == True
+
+    assert isinstance(funcs[0], str) == True
+    assert isinstance(times[0], float) == True
+
     with pytest.raises(TypeError):
-        read_log("input/out_test/output.0", 123)
+        read_log(path, "123")
+    with pytest.raises(ValueError):
+        read_log(path, 123)

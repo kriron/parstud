@@ -14,7 +14,7 @@ def read_log(dir, flag_is_time):
     """
     return_list = []
 
-    if type(flag_is_time) != int:
+    if not isinstance(flag_is_time,int):
         raise TypeError(
             "flag_is_time must be an integer (either 0 (for function data) or 1 (for time data) )"
         )
@@ -71,7 +71,10 @@ def build_database(path, name):
 
 
 if __name__ == "__main__":
+    # WIP, kept here as comment for reference of usage
+    """
     path = "tests/input/run_test/out_3/"
     name = "runinfo_parstud.csv"
     df = build_database(path, name)
     df.to_csv(path + "logs.csv")
+    """
