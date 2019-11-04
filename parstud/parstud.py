@@ -35,10 +35,17 @@ def read_database_and_gather_data(args):
         msg = "'{0!s}' does not exist".format(_dbf)
         raise FileNotFoundError(msg)
 
+    if args.outf:
+        if os.path.isfile(args.outf) and not os.access(args.outf, os.W_OK):
+            msg = "Cannot write to {0!s}".format(args.outf)
+            raise IOError(msg)
+
     _reader_df = build_database(args.idir, args.dbf)
-    print(_reader_df)
-    # print(args)
-    pass
+
+    if args.outf:
+        _reader_df.to_csv(args.outf)
+    else:
+        print(_reader_df)
 
 
 def plot_logfile(args):
@@ -146,6 +153,13 @@ if __name__ == "__main__":
         help="""Run database file name""",
         type=str,
         default="runinfo_parstud.csv",
+    )
+    reader.add_argument(
+        "-o",
+        help="""File to store the generated data in.""",
+        type=str,
+        dest="outf",
+        default=None,
     )
 
     args = parser.parse_args()
