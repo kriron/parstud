@@ -3,14 +3,29 @@ import pandas as pd
 
 def read_log(dir, flag_is_time):
     """
-    Reads log file at given directory and extracts either funtion as string list or time as float list
+    Reads log file at given directory and extracts either funtion 
+    as string list or time as float list.
 
     Parameters
     ----------
     dir             :   string    
-        Path to log file from current working directory
+        Path to log file including log file name.
     flag_is_time    :   int
-        1 = return time data, 0 = return function data
+        1 = return time data, 0 = return function data.
+
+    Returns
+    -------
+    list
+        With time or function data depending on flag_is_time.
+
+    Raises
+    ------
+    TypeError
+        If flag_is_time is not an integer.
+    ValueError
+        If flag_is_time is not either 0 nor 1.
+    FileNotFoundError
+        If dir does not exist.
     """
     return_list = []
 
@@ -46,10 +61,20 @@ def build_database(path, name):
 
     Parameters
     ----------
-    pwd     :   string    
+    path    :   string    
         Path to log files
-    name   :   string
+    name    :   string
         Name of the run info csv file
+
+    Returns
+    -------
+    pandas.DataFrame
+        With time and function data for all log files.
+
+    Raises
+    ------
+    FileNotFoundError
+        If path and or name do not exist.
     """
 
     info = pd.read_csv(path + name)

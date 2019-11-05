@@ -45,3 +45,5 @@ def test_build_database():
 
     with pytest.raises(FileNotFoundError):
         df = build_database(bad_path, bad_name)
+        df = build_database(path, bad_name)
+        df = build_database(bad_path, name)
