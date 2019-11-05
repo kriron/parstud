@@ -4,11 +4,13 @@ A modular [Python 3](https://www.python.org/) project for generation and process
 
 ## Background
 
-Describe aim of the project with more detail. Include mentions to C++ 3DPOD code and briefly hot it works.
+The `parstud` project aims to create a flexible parametric study runner and subsequent text-to-image processing for applying 3D Proper Orthogonal Decomposition  (POD). In particular this code was developed to work in conjunction with our own open-source parallel C++ 3D POD code, [parallel-pod](https://github.com/mrovirasacie/parallel-pod). Nevertheless, the code is flexible enough that it can be adapted for other parametric studies with little effort.
+
+In order to understand `parstud` an introduction to [parallel-pod](https://github.com/mrovirasacie/parallel-pod) is relevant. POD or modal analysis is a post-processing mathematical technique that intends to extract the most important energetical and dynamical features of a fluid flow. These spatial features of the flow are known as modes. Each of them is related to characteristic values which represent their relative energy levels and instrinsic frequencies of motion. In our code, these modes are determined from compuational fluid dynamic (CFD). In particular, we used cases runned with the open-source C++ code [OpenFOAM](https://github.com/OpenFOAM). For a large number of time instants a regularly-spaced cloud of point data is extracted from the simulation. Each of these clouds is known as a snapshot and usually contains a large ammount of points. 
 
 ## About
 
-Go through each module as well as the main function and explain their functionalities.
+Go through each module as well as the main parstud function and explain all relevant functionalities.
 
 ## Getting Started
 
@@ -27,7 +29,13 @@ conda env create -f parstud/conda/parstud.yml
 conda activate parstud
 ```
 
-## Running the tests
+After executing these commands a new Conda environment names `parstud` will be created with all necessary packages. The environment is self-contained so as to not influence other local python installations and avoid conflicts with previously installed packages. In order to deactivate this environment simply type:
+
+```
+conda deactivate
+```
+
+## Testing
 
 Testing of all modules within `parstud` can be done automatically by running:
 
@@ -46,6 +54,14 @@ This will create an `htmlcov/` folder in the root of your `parstud` folder. Insi
 ```
 firefox htmlcov/index.html 
 ```
+
+Indiviudual modules can also be tested in a similar manner. For instance check the tests and coverage of the plotter module by:
+
+```
+python -m pytest tests/test_plotter/ --cov=parstud/plotter/
+```
+
+The implemented tests have the aim to check that the functions within the three modules `runner`, `reader` and `plotter` have the desired functionality as well as raising the correct error warnings.
 
 ## Authors
 
