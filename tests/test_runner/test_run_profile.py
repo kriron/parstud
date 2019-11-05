@@ -140,7 +140,7 @@ def test_run_and_gather_statistics():
 
     # Generate syscalls, build run database and execute commands
     _variations = [".", "blargh"]
-    _basecmd = "/usr/bin/ls"
+    _basecmd = "/bin/ls"  # Could also be in "/usr/bin/ls"
     _syscalls = generate_syscalls(_variations, _basecmd)
     _passes_per_cmd = 1
     _output_dir = next(_output_dir_iter)

@@ -1,0 +1,13 @@
+name: parstud
+
+channels:
+  - defaults
+  - conda-forge
+
+dependencies:
+  - python=3.7
+  - matplotlib
+  - pandas
+  - scipy
+  - pytest
+  - pytest-cov
