@@ -1,6 +1,7 @@
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
+import os
 
 
 def error_plot(df, path, ext):
@@ -26,8 +27,10 @@ def error_plot(df, path, ext):
         plt.title(mean.columns[i])
         plt.ylabel("Time [s]")
         plt.xlabel("Number of processors")
-        plt.savefig(path + "errorbar_" + str(i) +
-                    "." + ext, bbox_inches="tight")
+        plt.savefig(
+            os.path.join(path, "errorbar_" + str(i) + "." + ext), 
+            bbox_inches="tight"
+        )
 
 
 def reduce_df(df):
@@ -59,7 +62,7 @@ def piechart_plot(df, path, ext):
     # Equal aspect ratio ensures that pie is drawn as a circle.
     ax1.axis("equal")
     plt.title("Average time distribution for 3DPOD of 200 snapshots")
-    plt.savefig(path + "piechart." + ext, bbox_inches="tight")
+    plt.savefig(os.path.join(path, "piechart." + ext), bbox_inches="tight")
 
 
 if __name__ == "__main__":
