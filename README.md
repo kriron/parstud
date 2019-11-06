@@ -17,30 +17,38 @@ Although still work in progress, `parallel-pod` is in working condition and we w
 
 ## About
 
-`parstud` is divided up into three different modules, each containing a series of worker and helper functions. Here, we will cover each of them individually:
+`parstud` is divided up into three different modules (`runner`, `reader` and `plotter`), each containing a series of worker and helper functions. Although they can be called and run separately, they can also be executed using the main script `parstud.py`. This function is implemented with subcommand argument parsing for ease of use of the modules. More information about how to correctly call the `parstud.py` script can be seen in [**Getting Started**](#Getting-Started). Here, we will cover each of the modules individually:
 
 #### `runner`
 
-The `runner` module contain one main script, `run_profile.py`. The functionality of this script is divided up sequentially as follows:
+The `runner` module contains one main script, `run_profile.py`. The functionality of this script is divided up sequentially as follows:
 
-1. Check if the OS is compatible. Due to the fact that almost the entirety of academic and high performance computing (HPC) cluster environments are running Linux, other OS are not supported by the current implementation.
+1. Check if the OS is compatible. Since almost the entirety of academic and high-performance computing (HPC) cluster environments are running Linux, other OSs are not supported by the current implementation.
 
-2. Generate the system calls by applying the variation of an input parameter (i.e. number of threads to be employed in the run) over a pre-defined command.
+2. Generate the system calls by applying the variation of an input parameter (i.e. the number of threads to be employed in the run) over a pre-defined command.
 
 3. Create three `info` files in which to store relevant information for the case:
-   - `meminfo`: stores the RAM information of the system.
-   - `sysinfo`: stores general information about the hardware of the system (i.e. architechture, CPUs, cache...).
-   - `runinfo`: stores the different calls and the number of current and total passes for that command call. Start/stop information is also recorded here.
+ - `meminfo`: stores the RAM information of the system.
+ - `sysinfo`: stores general information about the hardware of the system (i.e. architecture, CPUs, cache...).
+ - `runinfo`: stores the different calls and the number of current and total passes for that command call. Start/stop information is also recorded here.
 
 #### `reader`
 
 The output logs created by the different calls issued by the runner modules are then handled separately by the `reader` module and its main script `reader.py`. This module has two functions which handle the reading as follows:
 
-- `read_log`: reads both the different functionalities executed by the `parallel-pod` code (i.e. reading, computing and writing) as well as the time it took for each of these functions to finish.
+- `read_log`: reads both the different functionalities executed by the `parallel-pod` code (i.e. reading, computing, and writing) as well as the time it took for each of these functions to finish.
 
 - `build_database`: generates a pandas dataframe database based on the calls recorded into `runinfo` by the `runner` module. For each of the calls, it executes the `read_log` function to extract the relevant data from the logs. The function then returns a structured dataframe including all function and time data for all logs.
 
+After the `build_database` function creates the database based on the logs from the runs, storing it in a `cvs` file is a typical use case.
+
 #### `plotter`
+
+The `plotter` module can be employed to read the database and create two types of plots. This is done through two different functions inside the module.
+
+- `error_plot`: exports seven images, one for each functionality of the `parallel-pod` code. The data for all passes for each run at a fixed number of processors are used to create both mean and error values. Hence, trends in time spent against the number of processors as well as data variability can be observed quickly.
+
+- `piechart_plot`: exports one single image containing the averaged proportion *reading*, *computing* and *writing* functions among all runs and all passes. For this, a reduction in variables from the seven initial functions available in the `parallel-pod` logs to only three has to be performed. This is done by using the helper function `reduce_df`. This allows to swiftly observe bottlenecks and distribution of the code's load. 
 
 ## Getting Started
 
@@ -52,7 +60,7 @@ First clone this repository by:
 git clone https://github.com/kriron/parstud
 ```
 
-In order to use `parstud` several [Python 3](https://www.python.org/) packages are required. Creating a brand new [Conda](https://docs.conda.io/en/latest/) environment for this is recommended. This can be done easily with the provided yml file as follows:
+In order to use `parstud` several [Python 3](https://www.python.org/) packages are required. Creating a brand new [Conda](https://docs.conda.io/en/latest/) environment for this is recommended. This can be done easily with the provided `yml` file as follows:
 
 ```
 conda env create -f parstud/conda/parstud.yml
@@ -64,6 +72,36 @@ After executing these commands a new Conda environment names `parstud` will be c
 ```
 conda deactivate
 ```
+
+To check that everything is running smoothly you can attempt to prompt the help message from the `runner` module executing it through the main `parstud.py` script. This is done by:
+
+```
+python parstud/parstud.py run --help
+```
+
+You should see the following:
+
+```
+usage: parstud.py run [-h] [-fd] [-v [VARIATIONS [VARIATIONS ...]]]
+ [-p PASSES]
+ dir systemcall
+
+positional arguments:
+ dir Directory where to store the run output.
+ systemcall Base system call to be varied.
+
+optional arguments:
+ -h, --help show this help message and exit
+ -fd, --forcedirectory
+ Force usage of output directory. WARNING: This will
+ wipe the specified directory clean
+ -v [VARIATIONS [VARIATIONS ...]], --variations [VARIATIONS [VARIATIONS ...]]
+ Variations to be applied to base system call
+ -p PASSES, --passes PASSES
+ Number of passes per systemcall variation.
+```
+
+Similar help messages can be obtained for the `read` and `plot` subcommands.
 
 ## Testing
 

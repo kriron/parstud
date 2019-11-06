@@ -137,7 +137,7 @@ if __name__ == "__main__":
         "-fd",
         "--forcedirectory",
         dest="forcedir",
-        help="""Force usage of output directory. WARNING: This will wipe the specified drectory clean""",
+        help="""Force usage of output directory. WARNING: This will wipe the specified directory clean""",
         action="store_true",
     )
     runner.add_argument(
