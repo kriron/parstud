@@ -93,13 +93,3 @@ def build_database(path, name):
     df["Number of processors"] = nproc.values
     df["Pass number"] = npass.values
     return df
-
-
-if __name__ == "__main__":
-    # WIP, kept here as comment for reference of usage
-    """
-    path = "tests/input/run_test/out_3/"
-    name = "runinfo_parstud.csv"
-    df = build_database(path, name)
-    df.to_csv(path + "logs.csv")
-    """
