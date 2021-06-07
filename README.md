@@ -134,4 +134,4 @@ The implemented tests have the aim to check that the functions within the three 
 ## Authors
 
 * [Kristian Rönnberg](https://github.com/kriron)
-* [Marc Rovira](https://github.com/mrovirasacie)
+* [Marc Rovira](https://github.com/marrov)
